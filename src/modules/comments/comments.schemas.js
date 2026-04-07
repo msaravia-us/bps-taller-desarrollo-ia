@@ -9,6 +9,12 @@ const createCommentSchema = z
   })
   .openapi("CreateCommentRequest");
 
+const updateCommentSchema = z
+  .object({
+    body: z.string().trim().min(1).max(1000).openapi({ example: "Updated comment text." }),
+  })
+  .openapi("UpdateCommentRequest");
+
 const commentListQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
@@ -26,6 +32,7 @@ function toCommentListResponse(payload) {
 
 module.exports = {
   createCommentSchema,
+  updateCommentSchema,
   commentListQuerySchema,
   toCommentResponse,
   toCommentListResponse,

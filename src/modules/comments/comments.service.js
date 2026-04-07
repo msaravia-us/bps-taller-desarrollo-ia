@@ -36,7 +36,16 @@ async function listComments(issueId, userId, query) {
   return { items, total, page: query.page, pageSize: query.pageSize };
 }
 
+async function updateComment(issueId, commentId, body, userId) {
+  await assertIssueAccess(issueId, userId);
+  const existing = await repository.findCommentByIdForIssue(commentId, issueId);
+  if (!existing) throw new HttpError(404, "Comment not found");
+  if (existing.authorId !== userId) throw new HttpError(403, "Forbidden");
+  return repository.updateComment(commentId, { body: body.body });
+}
+
 module.exports = {
   createComment,
   listComments,
+  updateComment,
 };

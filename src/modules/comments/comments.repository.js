@@ -18,8 +18,24 @@ async function createComment(data) {
   return prisma.comment.create({ data });
 }
 
+async function findCommentByIdForIssue(commentId, issueId) {
+  return prisma.comment.findFirst({
+    where: { id: commentId, issueId },
+  });
+}
+
+async function updateComment(commentId, data) {
+  return prisma.comment.update({
+    where: { id: commentId },
+    data,
+    include: { author: true },
+  });
+}
+
 module.exports = {
   countComments,
   findComments,
   createComment,
+  findCommentByIdForIssue,
+  updateComment,
 };

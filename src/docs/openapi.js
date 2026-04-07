@@ -17,6 +17,7 @@ const {
 } = require("../modules/issues/issues.schemas");
 const {
   createCommentSchema,
+  updateCommentSchema,
   commentListQuerySchema,
 } = require("../modules/comments/comments.schemas");
 
@@ -24,6 +25,7 @@ function getOpenApiSpec() {
   const registry = new OpenAPIRegistry();
   const projectIdParamSchema = z.object({ projectId: z.string() });
   const issueIdParamSchema = z.object({ issueId: z.string() });
+  const issueCommentParamsSchema = z.object({ issueId: z.string(), commentId: z.string() });
 
   registry.register("RegisterRequest", registerSchema);
   registry.register("LoginRequest", loginSchema);
@@ -35,6 +37,7 @@ function getOpenApiSpec() {
   registry.register("IssueQuery", issueQuerySchema);
   registry.register("CreateLabelRequest", createLabelSchema);
   registry.register("CreateCommentRequest", createCommentSchema);
+  registry.register("UpdateCommentRequest", updateCommentSchema);
   registry.register("CommentListQuery", commentListQuerySchema);
 
   registry.registerPath({
@@ -208,6 +211,22 @@ function getOpenApiSpec() {
       body: { content: { "application/json": { schema: createCommentSchema } } },
     },
     responses: { 201: { description: "Comentario creado" } },
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/issues/{issueId}/comments/{commentId}",
+    summary: "Editar comentario",
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: issueCommentParamsSchema,
+      body: { content: { "application/json": { schema: updateCommentSchema } } },
+    },
+    responses: {
+      200: { description: "Comentario actualizado" },
+      403: { description: "Solo el autor puede editar" },
+      404: { description: "Issue o comentario no encontrado" },
+    },
   });
 
   const generator = new OpenApiGeneratorV3(registry.definitions);
