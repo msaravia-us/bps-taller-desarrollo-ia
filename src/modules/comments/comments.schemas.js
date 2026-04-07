@@ -5,8 +5,28 @@ extendZodWithOpenApi(z);
 
 const createCommentSchema = z
   .object({
-    body: z.string().trim().min(1).max(1000).openapi({ example: "Este issue ya está en progreso." }),
+    body: z.string().trim().min(1).max(1000).openapi({ example: "This issue is now in progress." }),
   })
   .openapi("CreateCommentRequest");
 
-module.exports = { createCommentSchema };
+const commentListQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(50).default(10),
+  })
+  .openapi("CommentListQuery");
+
+function toCommentResponse(comment) {
+  return comment;
+}
+
+function toCommentListResponse(payload) {
+  return payload;
+}
+
+module.exports = {
+  createCommentSchema,
+  commentListQuerySchema,
+  toCommentResponse,
+  toCommentListResponse,
+};

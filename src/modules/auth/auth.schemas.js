@@ -16,4 +16,12 @@ const loginSchema = z
   })
   .openapi("LoginRequest");
 
-module.exports = { registerSchema, loginSchema };
+function toAuthResponse(payload) {
+  return payload;
+}
+
+function toMeResponse(user) {
+  return { user };
+}
+
+module.exports = { registerSchema, loginSchema, toAuthResponse, toMeResponse };

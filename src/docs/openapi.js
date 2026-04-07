@@ -17,6 +17,7 @@ const {
 } = require("../modules/issues/issues.schemas");
 const {
   createCommentSchema,
+  commentListQuerySchema,
 } = require("../modules/comments/comments.schemas");
 
 function getOpenApiSpec() {
@@ -34,6 +35,7 @@ function getOpenApiSpec() {
   registry.register("IssueQuery", issueQuerySchema);
   registry.register("CreateLabelRequest", createLabelSchema);
   registry.register("CreateCommentRequest", createCommentSchema);
+  registry.register("CommentListQuery", commentListQuerySchema);
 
   registry.registerPath({
     method: "get",
@@ -47,7 +49,7 @@ function getOpenApiSpec() {
     path: "/auth/register",
     summary: "Registro de usuario (email + nombre)",
     request: { body: { content: { "application/json": { schema: registerSchema } } } },
-    responses: { 201: { description: "Usuario registrado con token" }, 409: { description: "Usuario ya existe" } },
+    responses: { 201: { description: "Registered; body includes token and user" }, 409: { description: "User already exists" } },
   });
 
   registry.registerPath({
@@ -55,7 +57,7 @@ function getOpenApiSpec() {
     path: "/auth/login",
     summary: "Login por email",
     request: { body: { content: { "application/json": { schema: loginSchema } } } },
-    responses: { 200: { description: "Token y usuario" }, 404: { description: "Usuario no existe" } },
+    responses: { 200: { description: "token and user" }, 404: { description: "User not found" } },
   });
 
   registry.registerPath({
@@ -63,7 +65,7 @@ function getOpenApiSpec() {
     path: "/auth/me",
     summary: "Usuario actual",
     security: [{ bearerAuth: [] }],
-    responses: { 200: { description: "Perfil del usuario autenticado" }, 401: { description: "No autorizado" } },
+    responses: { 200: { description: "Current user object under user key" }, 401: { description: "Unauthorized" } },
   });
 
   registry.registerPath({
@@ -189,8 +191,11 @@ function getOpenApiSpec() {
     path: "/issues/{issueId}/comments",
     summary: "Listar comentarios de issue",
     security: [{ bearerAuth: [] }],
-    request: { params: issueIdParamSchema },
-    responses: { 200: { description: "Comentarios" } },
+    request: {
+      params: issueIdParamSchema,
+      query: commentListQuerySchema,
+    },
+    responses: { 200: { description: "Paginated list: items, total, page, pageSize" } },
   });
 
   registry.registerPath({

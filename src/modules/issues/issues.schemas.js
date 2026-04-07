@@ -34,9 +34,24 @@ const createLabelSchema = z
   })
   .openapi("CreateLabelRequest");
 
+function toIssueResponse(issue) {
+  return issue;
+}
+
+function toIssueListResponse(payload) {
+  return payload;
+}
+
+function toLabelResponse(label) {
+  return label;
+}
+
 module.exports = {
   issueSchema,
   updateIssueSchema,
   issueQuerySchema,
   createLabelSchema,
+  toIssueResponse,
+  toIssueListResponse,
+  toLabelResponse,
 };
