@@ -61,7 +61,7 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>
-          Use the email you registered with. No password in this workshop API.
+          Use the email you registered with. This app does not use a password.
         </CardDescription>
       </CardHeader>
       <CardContent>
