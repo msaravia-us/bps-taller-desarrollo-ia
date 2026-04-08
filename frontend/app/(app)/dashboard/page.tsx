@@ -29,6 +29,12 @@ export default function DashboardPage() {
         <Button type="button" variant="outline" onClick={() => logout()}>
           Sign out
         </Button>
+        <Link
+          href="/dashboard/issues"
+          className={cn(buttonVariants({ variant: "outline" }))}
+        >
+          Issues
+        </Link>
         <Link href="/" className={cn(buttonVariants({ variant: "ghost" }))}>
           Home
         </Link>
