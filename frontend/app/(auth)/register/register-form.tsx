@@ -64,8 +64,7 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle>Create account</CardTitle>
         <CardDescription>
-          Register with email and display name. The API issues a JWT without a
-          password.
+          Enter your email and display name to get started.
         </CardDescription>
       </CardHeader>
       <CardContent>

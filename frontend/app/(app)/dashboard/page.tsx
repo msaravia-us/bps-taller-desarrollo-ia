@@ -23,8 +23,7 @@ export default function DashboardPage() {
         </p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Protected routes use your JWT from local storage. Add projects and
-        issues here in a next step.
+        You are all set. Start creating and tracking your work from here.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" onClick={() => logout()}>

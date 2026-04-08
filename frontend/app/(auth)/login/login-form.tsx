@@ -61,7 +61,7 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>
-          Use the email you registered with. This app does not use a password.
+          Use your registered email to access your account.
         </CardDescription>
       </CardHeader>
       <CardContent>

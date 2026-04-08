@@ -6,27 +6,19 @@ export default function Home() {
       <main className="flex w-full max-w-lg flex-col gap-8 text-center sm:text-left">
         <div className="flex flex-col gap-3">
           <p className="text-sm font-medium text-muted-foreground">
-            Workshop app
+            Welcome
           </p>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Issue tracker
           </h1>
           <p className="text-base leading-relaxed text-muted-foreground">
-            Sign in with the Express API (JWT), then use this area for projects
-            and issues.
+            Sign in to manage your projects and issues in one place.
           </p>
         </div>
         <div className="flex flex-col items-center sm:items-start">
           <HomeNav />
         </div>
-        <p className="text-xs text-muted-foreground">
-          Set <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code>{" "}
-          in{" "}
-          <code className="rounded bg-muted px-1 py-0.5">.env.local</code> (see{" "}
-          <code className="rounded bg-muted px-1 py-0.5">.env.example</code>
-          ). Run the API on a different port than Next.js (e.g.{" "}
-          <code className="rounded bg-muted px-1 py-0.5">PORT=3001</code>).
-        </p>
+
       </main>
     </div>
   );
