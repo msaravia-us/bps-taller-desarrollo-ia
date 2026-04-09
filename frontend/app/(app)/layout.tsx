@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { AppShell } from "@/components/app-shell";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/lib/auth/auth-provider";
 
@@ -30,5 +31,5 @@ export default function AppGroupLayout({
     );
   }
 
-  return <>{children}</>;
+  return <AppShell>{children}</AppShell>;
 }

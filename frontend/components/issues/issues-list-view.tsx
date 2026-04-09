@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { IssuesListSkeleton } from "@/components/issues/issues-list-skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -24,21 +24,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/lib/auth/auth-provider";
 import { ApiError } from "@/lib/api/client";
-import { listIssues } from "@/lib/api/issues";
+import { listAllIssues, updateIssue } from "@/lib/api/issues";
 import { listProjects } from "@/lib/api/projects";
-import type {
-  Issue,
-  IssuePriority,
-  IssueStatus,
-  PaginatedResponse,
-  Project,
-} from "@/lib/api/types";
+import type { Issue, IssuePriority, IssueStatus, PaginatedResponse, Project } from "@/lib/api/types";
+import { useAuth } from "@/lib/auth/auth-provider";
 import { cn } from "@/lib/utils";
 
-const STATUS_OPTIONS: Array<{ value: IssueStatus | "all"; label: string }> = [
+const STATUS_FILTER_OPTIONS: Array<{ value: IssueStatus | "all"; label: string }> = [
   { value: "all", label: "Todos" },
+  { value: "TODO", label: "To do" },
+  { value: "IN_PROGRESS", label: "In progress" },
+  { value: "DONE", label: "Done" },
+];
+
+const ROW_STATUS_OPTIONS: Array<{ value: IssueStatus; label: string }> = [
   { value: "TODO", label: "To do" },
   { value: "IN_PROGRESS", label: "In progress" },
   { value: "DONE", label: "Done" },
@@ -51,17 +51,8 @@ const PRIORITY_OPTIONS: Array<{ value: IssuePriority | "all"; label: string }> =
   { value: "HIGH", label: "High" },
 ];
 
-function formatStatus(status: IssueStatus) {
-  if (status === "IN_PROGRESS") return "In progress";
-  if (status === "DONE") return "Done";
-  return "To do";
-}
-
-function statusVariant(status: IssueStatus) {
-  if (status === "DONE") return "success" as const;
-  if (status === "IN_PROGRESS") return "warning" as const;
-  return "outline" as const;
-}
+const selectClass =
+  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm disabled:opacity-50";
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-CL", {
@@ -71,34 +62,63 @@ function formatDate(value: string) {
   });
 }
 
+function parseInitialProjectId(value: string | undefined): string | "all" {
+  if (value && value.length > 0) return value;
+  return "all";
+}
+
 export function IssuesListView({
-  projectId,
+  initialFilterProjectId,
   initialQuery = "",
   initialStatus = "all",
+  initialPriority = "all",
 }: {
-  projectId?: string;
+  initialFilterProjectId?: string;
   initialQuery?: string;
   initialStatus?: IssueStatus | "all";
+  initialPriority?: IssuePriority | "all";
 }) {
   const router = useRouter();
   const { token } = useAuth();
-  const [query, setQuery] = useState(initialQuery);
-  const [status, setStatus] = useState<IssueStatus | "all">(initialStatus);
-  const [priority, setPriority] = useState<IssuePriority | "all">("all");
-  const [data, setData] = useState<PaginatedResponse<(Issue & { project?: Project })> | null>(
-    null,
-  );
+
+  const initialProject = parseInitialProjectId(initialFilterProjectId);
+
+  const [draftQ, setDraftQ] = useState(initialQuery);
+  const [draftStatus, setDraftStatus] = useState<IssueStatus | "all">(initialStatus);
+  const [draftPriority, setDraftPriority] = useState<IssuePriority | "all">(initialPriority);
+  const [draftProjectId, setDraftProjectId] = useState<string | "all">(initialProject);
+
+  const [applied, setApplied] = useState(() => ({
+    q: initialQuery.trim(),
+    status: initialStatus,
+    priority: initialPriority,
+    projectId: initialProject,
+  }));
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [data, setData] = useState<PaginatedResponse<Issue> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const [dataVersion, setDataVersion] = useState(0);
+  const [updatingIssueId, setUpdatingIssueId] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const skipFullLoadingRef = useRef(false);
 
-  const activeFilters = useMemo(
-    () => ({
-      q: query.trim(),
-      status,
-      priority,
-    }),
-    [query, status, priority],
-  );
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    void listProjects(token)
+      .then((list) => {
+        if (!cancelled) setProjects(list);
+      })
+      .catch(() => {
+        if (!cancelled) setProjects([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,49 +129,21 @@ export function IssuesListView({
     }
 
     const run = async () => {
-      setIsLoading(true);
+      if (!skipFullLoadingRef.current) {
+        setIsLoading(true);
+      }
+      skipFullLoadingRef.current = false;
       setError(null);
       try {
-        const response = projectId
-          ? await listIssues({
-              projectId,
-              token,
-              q: activeFilters.q || undefined,
-              status: activeFilters.status,
-              priority: activeFilters.priority,
-              page: 1,
-              pageSize: 10,
-            })
-          : await (async () => {
-              const projects = await listProjects(token);
-              const responses = await Promise.all(
-                projects.map(async (project) => {
-                  const issues = await listIssues({
-                    projectId: project.id,
-                    token,
-                    q: activeFilters.q || undefined,
-                    status: activeFilters.status,
-                    priority: activeFilters.priority,
-                    page: 1,
-                    pageSize: 50,
-                  });
-                  return issues.items.map((issue) => ({ ...issue, project }));
-                }),
-              );
-              const items = responses
-                .flat()
-                .sort(
-                  (a, b) =>
-                    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-                );
-
-              return {
-                items,
-                total: items.length,
-                page: 1,
-                pageSize: items.length || 1,
-              };
-            })();
+        const response = await listAllIssues({
+          token,
+          projectId: applied.projectId === "all" ? undefined : applied.projectId,
+          q: applied.q || undefined,
+          status: applied.status,
+          priority: applied.priority,
+          page: 1,
+          pageSize: 50,
+        });
         if (!cancelled) setData(response);
       } catch (err) {
         if (!cancelled) {
@@ -171,17 +163,48 @@ export function IssuesListView({
     return () => {
       cancelled = true;
     };
-  }, [projectId, token, activeFilters]);
+  }, [
+    token,
+    applied.q,
+    applied.status,
+    applied.priority,
+    applied.projectId,
+    retryKey,
+    dataVersion,
+  ]);
 
   function applyFilters() {
     const params = new URLSearchParams();
-    if (projectId) {
-      params.set("projectId", projectId);
-    }
-    if (query.trim()) params.set("q", query.trim());
-    if (status !== "all") params.set("status", status);
-    router.push(`/dashboard/issues?${params.toString()}`);
+    if (draftProjectId !== "all") params.set("projectId", draftProjectId);
+    const qTrim = draftQ.trim();
+    if (qTrim) params.set("q", qTrim);
+    if (draftStatus !== "all") params.set("status", draftStatus);
+    if (draftPriority !== "all") params.set("priority", draftPriority);
+    const qs = params.toString();
+    router.push(qs ? `/dashboard/issues?${qs}` : "/dashboard/issues");
   }
+
+  async function handleStatusChange(issue: Issue, next: IssueStatus) {
+    if (next === issue.status || !token) return;
+    setStatusError(null);
+    setUpdatingIssueId(issue.id);
+    try {
+      await updateIssue({ issueId: issue.id, token, body: { status: next } });
+      skipFullLoadingRef.current = true;
+      setDataVersion((v) => v + 1);
+    } catch (err) {
+      setStatusError(
+        err instanceof ApiError ? err.message : "No se pudo actualizar el estado.",
+      );
+    } finally {
+      setUpdatingIssueId(null);
+    }
+  }
+
+  const appliedLabel =
+    applied.projectId === "all"
+      ? " de todos tus proyectos."
+      : " del proyecto seleccionado.";
 
   if (isLoading) {
     return <IssuesListSkeleton />;
@@ -193,43 +216,67 @@ export function IssuesListView({
         <CardTitle>Issues</CardTitle>
         <CardDescription>
           Busca, filtra y revisa el estado de los issues
-          {projectId ? " del proyecto." : " de todos tus proyectos."}
+          {appliedLabel}
         </CardDescription>
-        <CardAction>
+        <CardAction className="flex flex-wrap justify-end gap-2">
+          <Link
+            href="/dashboard/issues/new"
+            className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+          >
+            Nuevo issue
+          </Link>
           <Link
             href="/dashboard"
-            className={cn(buttonVariants({ variant: "outline" }))}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             Volver al dashboard
           </Link>
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 md:flex-row">
+        <div className="flex flex-col gap-2 md:flex-row md:flex-wrap">
+          <select
+            value={draftProjectId}
+            onChange={(event) =>
+              setDraftProjectId(
+                event.target.value === "all" ? "all" : event.target.value,
+              )
+            }
+            className={cn(selectClass, "min-w-[10rem] md:max-w-[14rem]")}
+            aria-label="Filtrar por proyecto"
+          >
+            <option value="all">Todos los proyectos</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.key} — {p.name}
+              </option>
+            ))}
+          </select>
           <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            className="min-w-0 flex-1 md:min-w-[12rem]"
+            value={draftQ}
+            onChange={(event) => setDraftQ(event.target.value)}
             placeholder="Buscar por titulo o descripcion"
             aria-label="Buscar issues"
           />
           <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value as IssueStatus | "all")}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            value={draftStatus}
+            onChange={(event) => setDraftStatus(event.target.value as IssueStatus | "all")}
+            className={selectClass}
             aria-label="Filtrar por estado"
           >
-            {STATUS_OPTIONS.map((option) => (
+            {STATUS_FILTER_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
           <select
-            value={priority}
+            value={draftPriority}
             onChange={(event) =>
-              setPriority(event.target.value as IssuePriority | "all")
+              setDraftPriority(event.target.value as IssuePriority | "all")
             }
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className={selectClass}
             aria-label="Filtrar por prioridad"
           >
             {PRIORITY_OPTIONS.map((option) => (
@@ -238,12 +285,29 @@ export function IssuesListView({
               </option>
             ))}
           </select>
-          <Button onClick={applyFilters}>Aplicar</Button>
+          <Button type="button" onClick={applyFilters} className="shrink-0">
+            Aplicar
+          </Button>
         </div>
 
         {error ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+            <p>{error}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={() => setRetryKey((k) => k + 1)}
+            >
+              Reintentar
+            </Button>
+          </div>
+        ) : null}
+
+        {statusError ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-            {error}
+            {statusError}
           </div>
         ) : null}
 
@@ -272,12 +336,31 @@ export function IssuesListView({
                   <TableRow key={issue.id}>
                     <TableCell className="font-medium">{issue.title}</TableCell>
                     <TableCell>
-                      {issue.project ? `${issue.project.key} - ${issue.project.name}` : "-"}
+                      {issue.project
+                        ? `${issue.project.key} - ${issue.project.name}`
+                        : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(issue.status)}>
-                        {formatStatus(issue.status)}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={issue.status}
+                          disabled={updatingIssueId === issue.id}
+                          onChange={(event) =>
+                            handleStatusChange(issue, event.target.value as IssueStatus)
+                          }
+                          className={cn(selectClass, "min-w-[9.5rem]")}
+                          aria-label={`Estado de ${issue.title}`}
+                        >
+                          {ROW_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {updatingIssueId === issue.id ? (
+                          <Spinner className="size-4 shrink-0 text-muted-foreground" />
+                        ) : null}
+                      </div>
                     </TableCell>
                     <TableCell>{issue.priority}</TableCell>
                     <TableCell>{formatDate(issue.updatedAt)}</TableCell>
