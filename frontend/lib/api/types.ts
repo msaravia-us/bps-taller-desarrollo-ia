@@ -44,6 +44,16 @@ export type ProjectDetail = Project & {
   labels: ProjectLabel[];
 };
 
+/** Body for POST /projects */
+export type CreateProjectInput = {
+  name: string;
+  key: string;
+  description?: string;
+};
+
+/** Body for PATCH /projects/:projectId */
+export type UpdateProjectInput = Partial<CreateProjectInput>;
+
 export type Issue = {
   id: string;
   projectId: string;

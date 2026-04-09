@@ -27,6 +27,12 @@ export default function DashboardPage() {
       </p>
       <div className="flex flex-wrap gap-2">
         <Link
+          href="/dashboard/projects"
+          className={cn(buttonVariants({ variant: "outline" }))}
+        >
+          Proyectos
+        </Link>
+        <Link
           href="/dashboard/issues"
           className={cn(buttonVariants({ variant: "outline" }))}
         >

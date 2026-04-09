@@ -31,6 +31,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Dashboard
             </Link>
             <Link
+              href="/dashboard/projects"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "text-muted-foreground",
+              )}
+            >
+              Proyectos
+            </Link>
+            <Link
               href="/dashboard/issues"
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
