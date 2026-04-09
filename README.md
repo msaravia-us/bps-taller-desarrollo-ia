@@ -45,15 +45,30 @@ Validar:
 
 ## Levantar frontend
 
-En otra terminal:
+## Variables de entorno (frontend)
+
+1. Desde `frontend/`, copiá la plantilla:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+En Windows (PowerShell), podés usar: `Copy-Item .env.example .env`
+
+2. Editá `frontend/.env` con al menos:
+
+| Variable              | Descripción |
+|-----------------------|-------------|
+| `NEXT_PUBLIC_API_URL` | URL base de la API backend. Por defecto `http://localhost:3000`. Si cambiás `PORT` en backend, actualizá este valor. |
+
+## Levantar frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Luego configurar `NEXT_PUBLIC_API_URL` en `frontend/.env.local` segun corresponda.
 
 Validar:
 
