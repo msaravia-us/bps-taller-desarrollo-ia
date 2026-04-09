@@ -225,12 +225,6 @@ export function IssuesListView({
           >
             Nuevo issue
           </Link>
-          <Link
-            href="/dashboard"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            Volver al dashboard
-          </Link>
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

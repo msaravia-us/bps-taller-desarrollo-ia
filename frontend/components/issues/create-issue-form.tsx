@@ -11,7 +11,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -114,7 +113,7 @@ export function CreateIssueForm() {
   });
 
   return (
-    <Card className="w-full max-w-lg">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Nuevo issue</CardTitle>
         <CardDescription>
@@ -249,14 +248,6 @@ export function CreateIssueForm() {
           </form>
         ) : null}
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 text-sm text-muted-foreground">
-        <Link
-          href="/dashboard/issues"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Volver al listado
-        </Link>
-      </CardFooter>
     </Card>
   );
 }

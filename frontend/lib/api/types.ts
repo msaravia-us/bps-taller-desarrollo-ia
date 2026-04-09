@@ -24,6 +24,26 @@ export type Project = {
   createdById: string;
 };
 
+export type ProjectMember = {
+  userId: string;
+  role: string;
+  user: Pick<User, "id" | "email" | "displayName">;
+};
+
+export type ProjectLabel = {
+  id: string;
+  projectId: string;
+  name: string;
+  color: string | null;
+  createdAt: string;
+};
+
+/** GET /projects/:projectId */
+export type ProjectDetail = Project & {
+  members: ProjectMember[];
+  labels: ProjectLabel[];
+};
+
 export type Issue = {
   id: string;
   projectId: string;
