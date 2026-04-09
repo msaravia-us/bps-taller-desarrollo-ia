@@ -27,6 +27,12 @@ const issueQuerySchema = z
   })
   .openapi("IssueQuery");
 
+const allIssuesQuerySchema = issueQuerySchema
+  .extend({
+    projectId: z.string().optional(),
+  })
+  .openapi("AllIssuesQuery");
+
 const createLabelSchema = z
   .object({
     name: z.string().min(1).max(30).openapi({ example: "backend" }),
@@ -50,6 +56,7 @@ module.exports = {
   issueSchema,
   updateIssueSchema,
   issueQuerySchema,
+  allIssuesQuerySchema,
   createLabelSchema,
   toIssueResponse,
   toIssueListResponse,

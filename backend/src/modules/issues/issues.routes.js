@@ -4,6 +4,7 @@ const {
   issueSchema,
   updateIssueSchema,
   issueQuerySchema,
+  allIssuesQuerySchema,
   createLabelSchema,
   toIssueResponse,
   toIssueListResponse,
@@ -23,6 +24,12 @@ router.post("/projects/:projectId/issues", async (req, res) => {
 router.get("/projects/:projectId/issues", async (req, res) => {
   const q = issueQuerySchema.parse(req.query);
   const result = await service.listIssues(req.params.projectId, req.user.id, q);
+  res.json(toIssueListResponse(result));
+});
+
+router.get("/issues", async (req, res) => {
+  const q = allIssuesQuerySchema.parse(req.query);
+  const result = await service.listAllAccessibleIssues(req.user.id, q);
   res.json(toIssueListResponse(result));
 });
 

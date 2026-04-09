@@ -21,6 +21,20 @@ async function findIssues(where, { skip, take }) {
   });
 }
 
+async function findIssuesWithProject(where, { skip, take }) {
+  return prisma.issue.findMany({
+    where,
+    skip,
+    take,
+    orderBy: { updatedAt: "desc" },
+    include: {
+      assignee: true,
+      project: true,
+      issueLabels: { include: { label: true } },
+    },
+  });
+}
+
 async function findIssueById(issueId) {
   return prisma.issue.findUnique({
     where: { id: issueId },
@@ -52,6 +66,7 @@ module.exports = {
   createIssue,
   countIssues,
   findIssues,
+  findIssuesWithProject,
   findIssueById,
   findIssueByIdBrief,
   updateIssue,

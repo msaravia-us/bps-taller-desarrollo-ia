@@ -13,6 +13,7 @@ const {
   issueSchema,
   updateIssueSchema,
   issueQuerySchema,
+  allIssuesQuerySchema,
   createLabelSchema,
 } = require("../modules/issues/issues.schemas");
 const {
@@ -35,6 +36,7 @@ function getOpenApiSpec() {
   registry.register("CreateIssueRequest", issueSchema);
   registry.register("UpdateIssueRequest", updateIssueSchema);
   registry.register("IssueQuery", issueQuerySchema);
+  registry.register("AllIssuesQuery", allIssuesQuerySchema);
   registry.register("CreateLabelRequest", createLabelSchema);
   registry.register("CreateCommentRequest", createCommentSchema);
   registry.register("UpdateCommentRequest", updateCommentSchema);
@@ -157,6 +159,15 @@ function getOpenApiSpec() {
       body: { content: { "application/json": { schema: createLabelSchema } } },
     },
     responses: { 201: { description: "Etiqueta creada" } },
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/issues",
+    summary: "Listar issues de todos los proyectos del usuario",
+    security: [{ bearerAuth: [] }],
+    request: { query: allIssuesQuerySchema },
+    responses: { 200: { description: "Lista paginada de issues (incluye proyecto)" } },
   });
 
   registry.registerPath({

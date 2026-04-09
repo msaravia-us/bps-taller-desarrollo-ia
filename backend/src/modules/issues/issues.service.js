@@ -72,6 +72,43 @@ async function listIssues(projectId, userId, query) {
   return { items: issues, total, page: query.page, pageSize: query.pageSize };
 }
 
+async function listAllAccessibleIssues(userId, query) {
+  const projects = await projectsRepository.findProjectsByUser(userId);
+  const projectIds = projects.map((p) => p.id);
+  if (projectIds.length === 0) {
+    return { items: [], total: 0, page: query.page, pageSize: query.pageSize };
+  }
+
+  let projectFilter;
+  if (query.projectId) {
+    if (!projectIds.includes(query.projectId)) {
+      throw new HttpError(404, "Project not found");
+    }
+    projectFilter = query.projectId;
+  } else {
+    projectFilter = { in: projectIds };
+  }
+
+  const where = { projectId: projectFilter };
+  if (query.status) where.status = query.status;
+  if (query.priority) where.priority = query.priority;
+  if (query.assigneeId) where.assigneeId = query.assigneeId;
+  if (query.q?.trim()) {
+    const term = query.q.trim();
+    where.OR = [{ title: { contains: term } }, { description: { contains: term } }];
+  }
+
+  const [total, issues] = await Promise.all([
+    repository.countIssues(where),
+    repository.findIssuesWithProject(where, {
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    }),
+  ]);
+
+  return { items: issues, total, page: query.page, pageSize: query.pageSize };
+}
+
 async function getIssue(issueId, userId) {
   return getIssueForUser(issueId, userId);
 }
@@ -116,6 +153,7 @@ async function createLabel(projectId, body, userId) {
 module.exports = {
   createIssue,
   listIssues,
+  listAllAccessibleIssues,
   getIssue,
   updateIssue,
   removeIssue,
