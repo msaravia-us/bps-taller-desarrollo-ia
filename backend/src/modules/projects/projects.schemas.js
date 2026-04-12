@@ -20,6 +20,21 @@ const addProjectMemberSchema = z
   })
   .openapi("AddProjectMemberRequest");
 
+function toProjectMemberResponse(member) {
+  return {
+    id: member.id,
+    projectId: member.projectId,
+    userId: member.userId,
+    role: member.role,
+    createdAt: member.createdAt,
+    user: member.user,
+  };
+}
+
+function toProjectMembersResponse(members) {
+  return members.map(toProjectMemberResponse);
+}
+
 function toProjectResponse(project) {
   return project;
 }
@@ -32,6 +47,8 @@ module.exports = {
   projectSchema,
   updateProjectSchema,
   addProjectMemberSchema,
+  toProjectMemberResponse,
+  toProjectMembersResponse,
   toProjectResponse,
   toProjectsResponse,
 };

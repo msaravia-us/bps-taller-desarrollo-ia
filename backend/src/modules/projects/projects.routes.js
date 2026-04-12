@@ -4,6 +4,7 @@ const {
   projectSchema,
   updateProjectSchema,
   addProjectMemberSchema,
+  toProjectMembersResponse,
   toProjectResponse,
   toProjectsResponse,
 } = require("./projects.schemas");
@@ -26,6 +27,11 @@ router.get("/", async (req, res) => {
 router.get("/:projectId", async (req, res) => {
   const project = await service.getProject(req.params.projectId, req.user.id);
   res.json(toProjectResponse(project));
+});
+
+router.get("/:projectId/members", async (req, res) => {
+  const members = await service.listProjectMembers(req.params.projectId, req.user.id);
+  res.json(toProjectMembersResponse(members));
 });
 
 router.patch("/:projectId", async (req, res) => {
