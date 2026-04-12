@@ -18,6 +18,12 @@ async function getProject(projectId, userId) {
   return project;
 }
 
+async function listProjectMembers(projectId, userId) {
+  const project = await repository.findProjectMembersForUser(projectId, userId);
+  if (!project) throw new HttpError(404, "Project not found");
+  return project.members;
+}
+
 async function updateProject(projectId, input, userId) {
   const member = await repository.findMembership(projectId, userId);
   if (!member || member.role !== "OWNER") throw new HttpError(403, "Owner access required");
@@ -45,6 +51,7 @@ module.exports = {
   createProject,
   listProjects,
   getProject,
+  listProjectMembers,
   updateProject,
   removeProject,
   addMember,

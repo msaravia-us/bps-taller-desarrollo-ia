@@ -125,6 +125,17 @@ function getOpenApiSpec() {
 
   registry.registerPath({
     method: "get",
+    path: "/projects/{projectId}/members",
+    summary: "Listar miembros del proyecto",
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: projectIdParamSchema,
+    },
+    responses: { 200: { description: "Lista de miembros del proyecto" } },
+  });
+
+  registry.registerPath({
+    method: "get",
     path: "/projects/{projectId}/issues",
     summary: "Listar issues del proyecto",
     security: [{ bearerAuth: [] }],

@@ -24,6 +24,26 @@ async function findProjectByIdForUser(projectId, userId) {
   });
 }
 
+async function findProjectMembersForUser(projectId, userId) {
+  return prisma.project.findFirst({
+    where: { id: projectId, members: { some: { userId } } },
+    select: {
+      members: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              displayName: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 async function findMembership(projectId, userId) {
   return prisma.projectMember.findUnique({
     where: { projectId_userId: { projectId, userId } },
@@ -58,6 +78,7 @@ module.exports = {
   createProjectWithOwner,
   findProjectsByUser,
   findProjectByIdForUser,
+  findProjectMembersForUser,
   findMembership,
   updateProject,
   deleteProject,
