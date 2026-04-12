@@ -240,6 +240,21 @@ function getOpenApiSpec() {
     },
   });
 
+  registry.registerPath({
+    method: "delete",
+    path: "/issues/{issueId}/comments/{commentId}",
+    summary: "Eliminar comentario",
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: issueCommentParamsSchema,
+    },
+    responses: {
+      204: { description: "Comentario eliminado" },
+      403: { description: "Solo el autor puede eliminar" },
+      404: { description: "Issue o comentario no encontrado" },
+    },
+  });
+
   const generator = new OpenApiGeneratorV3(registry.definitions);
   const doc = generator.generateDocument({
     openapi: "3.0.3",

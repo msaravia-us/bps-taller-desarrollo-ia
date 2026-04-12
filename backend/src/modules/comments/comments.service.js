@@ -44,8 +44,17 @@ async function updateComment(issueId, commentId, body, userId) {
   return repository.updateComment(commentId, { body: body.body });
 }
 
+async function deleteComment(issueId, commentId, userId) {
+  await assertIssueAccess(issueId, userId);
+  const existing = await repository.findCommentByIdForIssue(commentId, issueId);
+  if (!existing) throw new HttpError(404, "Comment not found");
+  if (existing.authorId !== userId) throw new HttpError(403, "Forbidden");
+  await repository.deleteComment(commentId);
+}
+
 module.exports = {
   createComment,
   listComments,
   updateComment,
+  deleteComment,
 };

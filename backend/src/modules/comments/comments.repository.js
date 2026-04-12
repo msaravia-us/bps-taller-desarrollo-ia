@@ -15,7 +15,10 @@ async function findComments(where, { skip, take }) {
 }
 
 async function createComment(data) {
-  return prisma.comment.create({ data });
+  return prisma.comment.create({
+    data,
+    include: { author: true },
+  });
 }
 
 async function findCommentByIdForIssue(commentId, issueId) {
@@ -32,10 +35,17 @@ async function updateComment(commentId, data) {
   });
 }
 
+async function deleteComment(commentId) {
+  return prisma.comment.delete({
+    where: { id: commentId },
+  });
+}
+
 module.exports = {
   countComments,
   findComments,
   createComment,
   findCommentByIdForIssue,
   updateComment,
+  deleteComment,
 };

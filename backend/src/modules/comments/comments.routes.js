@@ -30,4 +30,9 @@ router.patch("/issues/:issueId/comments/:commentId", async (req, res) => {
   res.json(toCommentResponse(comment));
 });
 
+router.delete("/issues/:issueId/comments/:commentId", async (req, res) => {
+  await service.deleteComment(req.params.issueId, req.params.commentId, req.user.id);
+  res.status(204).send();
+});
+
 module.exports = { commentsRouter: router };
