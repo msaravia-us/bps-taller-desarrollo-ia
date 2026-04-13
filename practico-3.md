@@ -18,7 +18,7 @@ Este ejercicio combina tres piezas: configurar y probar el MCP de GitHub, prepar
 ## Parte 1 — Configurar y probar el MCP de GitHub
 
 1. Ir a la [documentación oficial del MCP de GitHub para Cursor](https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-cursor.md) y seguir los pasos para instalar el MCP remoto de GitHub.
-2. En la configuración, reemplazar donde dice YOUR_GITHUB_PAT por el siguiente token: `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`
+2. En la configuración, reemplazar donde dice YOUR_GITHUB_PAT por el token de acceso personal (PAT) que se te proporcionó.
 3. Ir a los ajustes de Cursor y en la sección `Tools & MCPs` verificar que el MCP de GitHub esté instalado y funcionando.
 4. Probar el MCP de GitHub. Para esto pedirle al agente que liste los issues abiertos del repositorio del workshop.
 
