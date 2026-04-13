@@ -1,8 +1,6 @@
 # Workshop: Desarrollo con IA en Cursor
 
-Guia rapida para levantar el proyecto completo (backend + frontend).
-
-La letra del ejercicio esta en `EJERCICIO_PRACTICO.md`.
+Guía rápida para levantar el proyecto completo (backend + frontend).
 
 ## Estructura
 
